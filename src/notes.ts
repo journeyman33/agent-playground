@@ -84,4 +84,33 @@ export class NoteManager {
   async deleteNote(id: string): Promise<boolean> {
     return await this.storage.deleteNote(id);
   }
+
+  /**
+   * Filter notes by tags
+   * @param tags Array of tags to filter by (returns notes that have ALL specified tags)
+   */
+  async filterNotesByTags(tags: string[]): Promise<Note[]> {
+    const notes = await this.storage.getAllNotes();
+    if (tags.length === 0) return notes;
+
+    return notes
+      .filter(note =>
+        tags.every(tag => note.tags.includes(tag))
+      )
+      .sort((a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+  }
+
+  /**
+   * Get all unique tags from all notes
+   */
+  async getAllTags(): Promise<string[]> {
+    const notes = await this.storage.getAllNotes();
+    const tagSet = new Set<string>();
+    notes.forEach(note => {
+      note.tags.forEach(tag => tagSet.add(tag));
+    });
+    return Array.from(tagSet).sort();
+  }
 }

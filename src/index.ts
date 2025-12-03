@@ -48,9 +48,21 @@ program
 program
   .command('list')
   .description('List all notes (most recent first)')
-  .action(async () => {
+  .option('--tags <tags>', 'Filter by comma-separated tags (shows notes with ALL specified tags)')
+  .action(async (options) => {
     try {
-      const notes = await noteManager.listNotes();
+      let notes;
+      if (options.tags) {
+        const tags = parseTags(options.tags);
+        notes = await noteManager.filterNotesByTags(tags);
+        if (notes.length === 0) {
+          displayInfo(`No notes found with tags: ${tags.join(', ')}`);
+          return;
+        }
+        displayInfo(`Showing notes with tags: ${tags.join(', ')}`);
+      } else {
+        notes = await noteManager.listNotes();
+      }
       displayNoteList(notes);
     } catch (error) {
       displayError(error instanceof Error ? error.message : 'Failed to list notes');
@@ -95,6 +107,39 @@ program
     }
   });
 
+// Update command
+program
+  .command('update <id>')
+  .description('Update an existing note')
+  .option('-t, --title <title>', 'New title')
+  .option('-b, --body <body>', 'New body')
+  .option('--tags <tags>', 'New comma-separated tags')
+  .action(async (id: string, options) => {
+    try {
+      // Ensure at least one field is being updated
+      if (!options.title && !options.body && !options.tags) {
+        displayError('Please provide at least one field to update (--title, --body, or --tags)');
+        process.exit(1);
+      }
+
+      const updates: { title?: string; body?: string; tags?: string[] } = {};
+      if (options.title) updates.title = options.title;
+      if (options.body) updates.body = options.body;
+      if (options.tags) updates.tags = parseTags(options.tags);
+
+      const updatedNote = await noteManager.updateNote(id, updates);
+      if (!updatedNote) {
+        displayError(`Note with ID "${id}" not found`);
+        process.exit(1);
+      }
+      displaySuccess(`Note updated: ${id}`);
+      displayNote(updatedNote);
+    } catch (error) {
+      displayError(error instanceof Error ? error.message : 'Failed to update note');
+      process.exit(1);
+    }
+  });
+
 // Delete command
 program
   .command('delete <id>')
@@ -109,6 +154,25 @@ program
       displaySuccess(`Note deleted: ${id}`);
     } catch (error) {
       displayError(error instanceof Error ? error.message : 'Failed to delete note');
+      process.exit(1);
+    }
+  });
+
+// Tags command
+program
+  .command('tags')
+  .description('List all tags used in notes')
+  .action(async () => {
+    try {
+      const tags = await noteManager.getAllTags();
+      if (tags.length === 0) {
+        displayInfo('No tags found');
+      } else {
+        displayInfo(`Available tags (${tags.length}):`);
+        tags.forEach(tag => console.log(`  - ${tag}`));
+      }
+    } catch (error) {
+      displayError(error instanceof Error ? error.message : 'Failed to list tags');
       process.exit(1);
     }
   });

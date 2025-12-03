@@ -87,6 +87,50 @@ notes search "javascript"
 notes search "meeting"
 ```
 
+### Update a Note
+
+```bash
+notes update <note-id> [options]
+```
+
+Update one or more fields of an existing note:
+```bash
+# Update title only
+notes update a1b2c3d4-5678-90ab-cdef-1234567890ab -t "New Title"
+
+# Update body only
+notes update a1b2c3d4-5678-90ab-cdef-1234567890ab -b "Updated content"
+
+# Update tags
+notes update a1b2c3d4-5678-90ab-cdef-1234567890ab --tags "updated,revised"
+
+# Update multiple fields
+notes update a1b2c3d4-5678-90ab-cdef-1234567890ab -t "New Title" -b "New Body" --tags "new"
+```
+
+### Filter Notes by Tags
+
+```bash
+notes list --tags <tags>
+```
+
+Show only notes that have ALL specified tags:
+```bash
+# Notes with 'javascript' tag
+notes list --tags "javascript"
+
+# Notes with both 'javascript' AND 'tutorial' tags
+notes list --tags "javascript,tutorial"
+```
+
+### List All Tags
+
+```bash
+notes tags
+```
+
+Shows all unique tags used across all notes, sorted alphabetically.
+
 ### Delete a Note
 
 ```bash
